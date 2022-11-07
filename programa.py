@@ -12,8 +12,6 @@ Salida:
 3. la tabla de síndrome incompleta (que corrige d-1/2 errores)
 4. Decodificación de las palabras (w_1,\ldots, w_k) '''
 
-import numpy as np
-
 def decodificacionSindromeBinario(n, G, w):
 
     # G es una matriz mxn

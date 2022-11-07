@@ -1,15 +1,15 @@
 def main():
-    lista = [1,1,1,1,0,0,0]
-
-    print(lista)
     
+    lista = [1,0,0,0]
+    print(lista)
     while lista != None:
-        lista = permutacion(lista)
+        lista = nextCombination(3, lista)
         print(lista)
 
-def permutacion(lista):
+    return
 
-    q = 4
+
+def nextCombination(q, lista):
 
     x = 0
     for number in lista:
@@ -60,10 +60,19 @@ def permutacion(lista):
                     leftmost += 1
                     break
     
-    # Si leftmost es igual al número de variables que tenemos hemos terminado
-    if leftmost == x:
+    # Si leftmost es igual al tamaño del vector, hemos terminado
+    if leftmost == n:
         return None
 
+    # Si leftmost es igual al número de variables añadimos un nuevo número
+    if leftmost == x:
+        listaret = []
+        for _ in range(leftmost+1):
+            listaret.append(1)
+        for _ in range(n-leftmost-1):
+            listaret.append(0)
+        return listaret
+    
     return lista
 
 if __name__ == "__main__":
