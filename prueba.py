@@ -130,7 +130,6 @@ def main():
     
 
     # Sacamos la distancia del codigo C
-    # ARREGLAR!!!
 
     m = len(H)
     n = len(H[0])
@@ -171,7 +170,7 @@ def main():
                 d = nlista
                 break
 
-            lista, nlista = nextCombination(2, lista)
+            lista, nlista = nextCombination(q, lista)
 
     print("La distancia del código d es " + str(d))
 
