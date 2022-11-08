@@ -1,6 +1,6 @@
 def main():
     
-    lista = [1,0,0,0]
+    lista = [0,0,0,0]
     print(lista)
     while lista != None:
         lista = nextCombination(3, lista)

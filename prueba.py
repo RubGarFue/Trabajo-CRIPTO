@@ -1,6 +1,6 @@
 def main():
 
-    G = [[1,0,0,0],[0,0,1,1]]
+    G = [[1,0,0,0,0,0,0,1,1,0,0],[0,1,0,0,0,0,0,1,0,1,0],[0,0,1,0,0,0,0,0,1,1,0],[0,0,0,1,0,0,0,1,1,1,1],[0,0,0,0,1,0,0,1,1,0,1],[0,0,0,0,0,1,0,0,1,0,1],[0,0,0,0,0,0,1,1,0,0,1]]
 
     m = len(G)
     n = len(G[0])
@@ -145,11 +145,13 @@ def main():
 
     # Comprobamos si la distancai es 1 (ver si hay alguna columna 0 en H)
     for j in range(n):
-        if H[0][j] == 0%q:
+        if H[0][j]%q == 0:
             zerocol = 1
-            for i in range(m):
-                if H[i][j] == 0%q:
+            for i in range(1, m):
+                if H[i][j]%q == 0:
                     zerocol += 1
+                else:
+                    break
             if zerocol == m:
                 d = 1
                 break
@@ -239,7 +241,7 @@ def nextCombination(q, lista):
             listaret.append(1)
         for _ in range(n-leftmost-1):
             listaret.append(0)
-        return listaret, x
+        return listaret, x+1
     
     return lista
 

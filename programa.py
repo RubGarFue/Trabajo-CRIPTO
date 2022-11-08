@@ -30,15 +30,21 @@ Salida:
 
 ##
 #
-# FUNCTION:
+# FUNCTION: syndromeDecoding
 #
-# DESCRIPTION:
+# DESCRIPTION: Función que recibe como argumento la matriz
+#   generadora G de un código C subespacio de Fq^n (junto con la
+#   q y la n), y una lista de palabras recibidas en dicho código y
+#   realiza la decodificación por síndrome de la misma.
 # 
-# PARAM: n
-# PARAM: q
-# PARAM: G
-# PARAM: w
-# RETURN:
+# PARAM: n -> Número de elementos de Fq en las palabras del código
+# PARAM: q -> Primo representativo del cuerpo Fq del código
+# PARAM: G -> Matriz generadora del código C
+# PARAM: w -> Lista de palabras recibidas del código C
+# RETURN: H -> Matriz de paridad H del código C
+#         d -> Distancia del código C
+#         t -> Tabla incompleta de síndromes
+#         cw -> (corrected words), palabras recibidas corregidas
 #
 ##
 def syndromeDecoding(n, q, G, w):
@@ -89,12 +95,14 @@ def syndromeDecoding(n, q, G, w):
 # TODO: Por ahora la función no realiza escalonamientos de cuerpos finitos
 ##
 #
-# FUNCTION:
+# FUNCTION: matrixGre
 #
-# DESCRIPTION:
+# DESCRIPTION: Función que recibe como argumento una matriz G y
+#   devuelve la misma en forma escalonada reducida
 # 
-# PARAM: G
-# RETURN:
+# PARAM: G -> Matriz mxn
+# RETURN: Ger -> (G row echelon) Matriz G en forma escalonada
+#   reducida
 #
 ##
 def matrixGre(G):
@@ -102,7 +110,7 @@ def matrixGre(G):
     m = len(G)
     n = len(G[0])
 
-    Ger = [G[row].copy() for row in range(m)]
+    Gre = [G[row].copy() for row in range(m)]
 
     # Matriz escalonada reducida
     lider = 0
@@ -110,7 +118,7 @@ def matrixGre(G):
         if n <= lider:
             break
         i = r
-        while Ger[i][lider] == 0:
+        while Gre[i][lider] == 0:
             i += 1
             if m == i:
                 i = r
@@ -120,22 +128,22 @@ def matrixGre(G):
         if n == lider:
             break
         if i != r:
-            Ger[i], Ger[r] = Ger[r], Ger[i]
-        li = Ger[r][lider]
+            Gre[i], Gre[r] = Gre[r], Gre[i]
+        li = Gre[r][lider]
         for a in range(n):
-            Ger[r][a] /= li
+            Gre[r][a] /= li
         for j in range(m):
             if j != r:
-                li = Ger[j][lider]
+                li = Gre[j][lider]
                 for a in range(n):
-                    Ger[j][a] -= li*Ger[r][a]
+                    Gre[j][a] -= li*Gre[r][a]
         lider += 1
     
     # Quitamos las columnas de todo 0
     remove = []
     for i in range(m):
         counter = 0
-        for number in Ger[i]:
+        for number in Gre[i]:
             if number != 0:
                 break
             counter += 1
@@ -143,42 +151,43 @@ def matrixGre(G):
             remove.append(i)
     
     for row in remove:
-        Ger.pop(row)
+        Gre.pop(row)
 
-    return Ger
+    return Gre
 
 # TODO: Por ahora la función no calcula matriz H de cuerpos finitos
 ##
 #
-# FUNCTION:
+# FUNCTION: matrixH
 #
-# DESCRIPTION:
+# DESCRIPTION: Función que recibe como argumento una matriz
+#   generadora G de un código C y devuelve su matriz de paridad H
 # 
-# PARAM: G
-# RETURN:
+# PARAM: G -> Matriz generadora del código C
+# RETURN: H -> Matriz de paridad del código C
 #
 ##
 def matrixH(G):
 
     # Matriz escalonada reducida
-    Ger = matrixGre(G)
+    Gre = matrixGre(G)
 
-    # Matriz en forma estándar Ges=Ger' (sabiendo las columnas a cambiar)
-    m = len(Ger)
-    n = len(Ger[0])
+    # Matriz en forma estándar Ges=Gre' (sabiendo las columnas a cambiar)
+    m = len(Gre)
+    n = len(Gre[0])
 
     swiped_columns = {}
 
     for i in range(m):
         lider = 0
-        for number in Ger[i]:
+        for number in Gre[i]:
             if number == 1:
                 break
             lider = lider + 1
         if i != lider:
             swiped_columns[i] = lider
             for a in range(m):
-                Ger[a][i], Ger[a][lider] = Ger[a][lider], Ger[a][i]
+                Gre[a][i], Gre[a][lider] = Gre[a][lider], Gre[a][i]
 
     # Matriz Ger=[I|A], sacamos A y hacemos -A^t
     At = []
@@ -186,7 +195,7 @@ def matrixH(G):
     for j in range(n-m):
         At.append([])
         for i in range(m):
-            At[j].append(-Ger[i][j+m]%2)
+            At[j].append(-Gre[i][j+m]%2)
 
     # Construimos H como H=[-A^t|I]
     H=At
@@ -217,12 +226,22 @@ def matrixH(G):
 
 ##
 #
-# FUNCTION:
+# FUNCTION: nextCombination
 #
-# DESCRIPTION:
+# DESCRIPTION: Función que recibe como argumento una lisita con l
+#   elementos distintos de 0. La función genera todas las posibles
+#   combinaciones de l elementos distintos de 0 y menores que q
+#   siguiendo un orden establecido, a continuación genera todas
+#   las posibles combinacioens de l+1 elementos... También
+#   siguiendo un orden establecido.
+#   Dada una lista, la función devuelve la siguiente combinación
+#   de elementos junto con el número de elementos distintos de 0
+#   de la nueva combinación.
 # 
-# PARAM: H
-# RETURN:
+# PARAM: q ->
+# PARAM: lista ->
+# RETURN: listaret ->
+#         x ->
 #
 ##
 def nextCombination(q, lista):
@@ -289,11 +308,11 @@ def nextCombination(q, lista):
             listaret.append(0)
         return listaret, x
     
-    return lista
+    return lista, x
 
 ##
 #
-# FUNCTION:
+# FUNCTION: distanceC
 #
 # DESCRIPTION:
 # 
@@ -317,11 +336,13 @@ def distanceC(H):
 
     # Comprobamos si la distancai es 1 (ver si hay alguna columna 0 en H)
     for j in range(n):
-        if H[0][j] == 0%q:
+        if H[0][j]%q == 0:
             zerocol = 1
-            for i in range(m):
-                if H[i][j] == 0%q:
+            for i in range(1, m):
+                if H[i][j]%q == 0:
                     zerocol += 1
+                else:
+                    break
             if zerocol == m:
                 d = 1
                 break
