@@ -1,9 +1,9 @@
 def main():
     
-    lista = [0,0,0,0]
+    lista = [0,0,0,0,0]
     print(lista)
     while lista != None:
-        lista = nextCombination(3, lista)
+        lista = nextCombination(4, lista)
         print(lista)
 
     return

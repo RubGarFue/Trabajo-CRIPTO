@@ -22,20 +22,19 @@ Salida:
 3. la tabla de síndrome incompleta (que corrige d-1/2 errores)
 4. Decodificación de las palabras (w_1,\ldots, w_k) '''
 
-##################################################################
-##                                                              ##
-##                       FUNCIÓN PRINCIPAL                      ##
-##                                                              ##
-##################################################################
+##################################################################################################
+##                                                                                              ##
+##                                       FUNCIÓN PRINCIPAL                                      ##
+##                                                                                              ##
+##################################################################################################
 
 ##
 #
 # FUNCTION: syndromeDecoding
 #
-# DESCRIPTION: Función que recibe como argumento la matriz
-#   generadora G de un código C subespacio de Fq^n (junto con la
-#   q y la n), y una lista de palabras recibidas en dicho código y
-#   realiza la decodificación por síndrome de la misma.
+# DESCRIPTION: Función que recibe como argumento la matriz generadora G de un código C subespacio
+#   de Fq^n (junto con la q y la n), y una lista de palabras recibidas en dicho código y realiza
+#   la decodificación por síndrome de la misma.
 # 
 # PARAM: n -> Número de elementos de Fq en las palabras del código
 # PARAM: q -> Primo representativo del cuerpo Fq del código
@@ -54,7 +53,11 @@ def syndromeDecoding(n, q, G, w):
     m = len(G)
 
     # Comprobamos que q sea un número primo
-    for num in range(2, int(q^0.5)+1):
+    if q <= 1:
+        print("ERROR: El número q ha de ser un número primo")
+        return
+
+    for num in range(2, int(q**0.5)+1):
         if q%num == 0:
             print("ERROR: El número q ha de ser un número primo")
             return
@@ -80,29 +83,28 @@ def syndromeDecoding(n, q, G, w):
     return H, d, t, cw
 
 
-##################################################################
-##                                                              ##
-##                     FUNCIONES AUXILIARES                     ##
-##                                                              ##
-##################################################################
+##################################################################################################
+##                                                                                              ##
+##                                     FUNCIONES AUXILIARES                                     ##
+##                                                                                              ##
+##################################################################################################
 
-##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##
-##                                                              ##
-##                     CÁLCULO DE MATRIZ H                      ##
-##                                                              ##
-##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##
+##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##
+##                                                                                              ##
+##                                     CÁLCULO DE MATRIZ H                                      ##
+##                                                                                              ##
+##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##
 
 # TODO: Por ahora la función no realiza escalonamientos de cuerpos finitos
 ##
 #
 # FUNCTION: matrixGre
 #
-# DESCRIPTION: Función que recibe como argumento una matriz G y
-#   devuelve la misma en forma escalonada reducida
+# DESCRIPTION: Función que recibe como argumento una matriz G y devuelve la misma en forma
+#   escalonada reducida
 # 
 # PARAM: G -> Matriz mxn
-# RETURN: Ger -> (G row echelon) Matriz G en forma escalonada
-#   reducida
+# RETURN: Ger -> (G row echelon) Matriz G en forma escalonada reducida
 #
 ##
 def matrixGre(G):
@@ -113,43 +115,51 @@ def matrixGre(G):
     Gre = [G[row].copy() for row in range(m)]
 
     # Matriz escalonada reducida
-    lider = 0
-    for r in range(m):
+    lider = 0 # Representa el líder de cada fila
+    # Realizamos un bucle por cada fila de G
+    for row in range(m):
+        # Si el líder es mayor que el número de elementos de G, significa que la fila es todo 0's
+        # y pasamos a la siguiente fila
         if n <= lider:
             break
-        i = r
+        i = row
         while Gre[i][lider] == 0:
             i += 1
             if m == i:
-                i = r
+                i = row
                 lider += 1
                 if n == lider:
                     break
         if n == lider:
             break
-        if i != r:
-            Gre[i], Gre[r] = Gre[r], Gre[i]
-        li = Gre[r][lider]
+        if i != row:
+            Gre[i], Gre[row] = Gre[row], Gre[i]
+        li = Gre[row][lider]
         for a in range(n):
-            Gre[r][a] /= li
+            # TODO: Aquí hay que definir el inverso multiplicativo, no dividir!!!
+            # TODO: Hay que poner un int(---) delante de la división para que los numeros que aparecen en H sean int
+            Gre[row][a] /= li
         for j in range(m):
-            if j != r:
+            if j != row:
                 li = Gre[j][lider]
                 for a in range(n):
-                    Gre[j][a] -= li*Gre[r][a]
+                    Gre[j][a] -= li*Gre[row][a]
         lider += 1
     
-    # Quitamos las columnas de todo 0
-    remove = []
+    # Quitamos las filas de todo 0's
+    remove = [] # Lista con los índices de las filas que vamos a eliminar
     for i in range(m):
-        counter = 0
+        counter = 0 # Representa el número de elementos que son 0 en una columna dada
         for number in Gre[i]:
+            # Si algún elemento es distinto de 0 salimos del for y pasamos a la siguiente fila
             if number != 0:
                 break
             counter += 1
+        # Si el número de elementos que son 0 coincide con n, añadimos su índice a la lista
         if counter == n:
             remove.append(i)
     
+    # Para cada índice en remove, eliminamos dicha fila de la matriz
     for row in remove:
         Gre.pop(row)
 
@@ -160,8 +170,8 @@ def matrixGre(G):
 #
 # FUNCTION: matrixH
 #
-# DESCRIPTION: Función que recibe como argumento una matriz
-#   generadora G de un código C y devuelve su matriz de paridad H
+# DESCRIPTION: Función que recibe como argumento una matriz generadora G de un código C y devuelve
+#   su matriz de paridad H
 # 
 # PARAM: G -> Matriz generadora del código C
 # RETURN: H -> Matriz de paridad del código C
@@ -203,6 +213,7 @@ def matrixH(G):
     m = len(H)
     n = len(H[0]) + m
 
+    # Concatenamos la matriz identidad a continuación de -A^t
     for i in range(m):
         for j in range(m):
             if j == i:
@@ -218,42 +229,39 @@ def matrixH(G):
     return H
 
 
-##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##
-##                                                              ##
-##                     CÁLCULO DE DISTANCIA d                   ##
-##                                                              ##
-##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##
+##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##
+##                                                                                              ##
+##                                     CÁLCULO DE DISTANCIA d                                   ##
+##                                                                                              ##
+##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##
 
 ##
 #
 # FUNCTION: nextCombination
 #
-# DESCRIPTION: Función que recibe como argumento una lisita con l
-#   elementos distintos de 0. La función genera todas las posibles
-#   combinaciones de l elementos distintos de 0 y menores que q
-#   siguiendo un orden establecido, a continuación genera todas
-#   las posibles combinacioens de l+1 elementos... También
-#   siguiendo un orden establecido.
-#   Dada una lista, la función devuelve la siguiente combinación
-#   de elementos junto con el número de elementos distintos de 0
-#   de la nueva combinación.
+# DESCRIPTION: Función que recibe como argumento una lisita con l elementos distintos de 0. La
+#   función genera todas las posibles combinaciones de l elementos distintos de 0 y menores que q
+#   siguiendo un orden establecido, a continuación genera todas las posibles combinacioens de l+1
+#   elementos... También siguiendo un orden establecido. Dada una lista, la función devuelve la
+#   siguiente combinación de elementos junto con el número de elementos distintos de 0 de la nueva
+#   combinación.
 # 
-# PARAM: q ->
-# PARAM: lista ->
-# RETURN: listaret ->
-#         x ->
+# PARAM: q -> Número siguiente al máximo que cada número dentro de la combinación puede alcanzar
+# PARAM: lista -> Lista conteniendo la combinación actual
+# RETURN: listaret -> Lista conteniendo la siguiente combinación en el orden correspondiente
+#         x -> Número de elementos distintos de 0 en la combinación devuelta
 #
 ##
 def nextCombination(q, lista):
 
-    x = 0
+    x = 0   # Indica el número de elementos distintos de 0 en lista
     for number in lista:
         if number != 0:
             x += 1
 
     n = len(lista)
     
-    leftmost = 0 # Indica el numero de números distitos de 0 a la izquierda
+    leftmost = 0    # Indica el número de elementos distitos de 0 a la izquierda
     # Realizamos un bucle por cada número distinto de 0
     for m in range(x):
         # Miramos de derecha a izquierda (desde el subconjunto n-m-1)
@@ -273,7 +281,8 @@ def nextCombination(q, lista):
                             lista[i], lista[i+1] = lista[i+1], lista[i]
                     else:
                         if lista[i] != q-1:
-                            # Si leftmost no es 0 pero nuestro elemento es distinto de q-1 sumamos 1
+                            # Si leftmost no es 0 pero nuestro elemento es distinto de q-1 sumamos
+                            # 1
                             lista[i] += 1
                             # Ahora reestablecemos los 
                             for l in range(leftmost):
@@ -291,7 +300,8 @@ def nextCombination(q, lista):
                     if lista[i] != q-1:
                         lista[i] += 1
                         return lista, x
-                    # Si está al final del todo sumamos 1 a leftmost (número a la izquierda) y salimos del bucle
+                    # Si está al final del todo sumamos 1 a leftmost (número a la izquierda) y
+                    # salimos del bucle
                     leftmost += 1
                     break
     
@@ -314,10 +324,11 @@ def nextCombination(q, lista):
 #
 # FUNCTION: distanceC
 #
-# DESCRIPTION:
+# DESCRIPTION: Función que recibe como argumento la matriz de paridad de un código C y devuelve su
+#   distancia
 # 
-# PARAM: H
-# RETURN:
+# PARAM: H -> Matriz de paridad del código C
+# RETURN: d -> Distancia del código C
 #
 ##
 def distanceC(H):
@@ -368,25 +379,26 @@ def distanceC(H):
     return d
 
 
-##################################################################
-##                                                              ##
-##                 FUNCIONES DE COMPROBACIÓN                    ##
-##                                                              ##
-##################################################################
+##################################################################################################
+##                                                                                              ##
+##                                 FUNCIONES DE COMPROBACIÓN                                    ##
+##                                                                                              ##
+##################################################################################################
 
 ##
 #
-# FUNCTION:
+# FUNCTION: isParityMatrix
 #
-# DESCRIPTION:
+# DESCRIPTION: Matriz que recibe una matriz generadora G de un código C y su matriz de paridad H y
+#   comprueba si es correcta
 # 
-# PARAM: q
-# PARAM: G
-# PARAM: H
-# RETURN:
+# PARAM: q -> Primo representativo del cuerpo Fq del código
+# PARAM: G -> Matriz generadora del código C
+# PARAM: H -> Matriz de paridad del código C
+# RETURN: True si H es la matriz de paridad de G. False si no lo es
 #
 ##
-def areCorrect(q, G, H):
+def isParityMatrix(q, G, H):
     
     m = len(G)
     n = len(G[0])
