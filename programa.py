@@ -36,17 +36,17 @@ Salida:
 #   de Fq^n (junto con la q y la n), y una lista de palabras recibidas en dicho código y realiza
 #   la decodificación por síndrome de la misma.
 # 
-# PARAM: n -> Número de elementos de Fq en las palabras del código
-# PARAM: q -> Primo representativo del cuerpo Fq del código
 # PARAM: G -> Matriz generadora del código C
+# PARAM: q -> Primo representativo del cuerpo Fq del código C
+# PARAM: n -> Número de elementos de Fq en las palabras del código
 # PARAM: w -> Lista de palabras recibidas del código C
 # RETURN: H -> Matriz de paridad H del código C
 #         d -> Distancia del código C
 #         t -> Tabla incompleta de síndromes
-#         cw -> (corrected words), palabras recibidas corregidas
+#         dw -> (decoded words), palabras recibidas corregidas
 #
 ##
-def syndromeDecoding(n, q, G, w):
+def syndromeDecoding(G, q, n, w):
 
     # G es una matriz mxn
 
@@ -75,12 +75,18 @@ def syndromeDecoding(n, q, G, w):
             return
     
     # Sacamos la matriz H
-    H = matrixH(G)
+    H = matrixH(G, q)
 
     # Sacamos la distancia d
-    d = distanceC(H)
+    d = distanceC(H, q)
 
-    return H, d, t, cw
+    # Sacamos la tabla de síndromes
+    t = syndromeTable(H, q)
+
+    # Decodificamos las palabras
+    dw = wordDecoding(w, q)
+
+    return H, d, t, dw
 
 
 ##################################################################################################
@@ -95,7 +101,6 @@ def syndromeDecoding(n, q, G, w):
 ##                                                                                              ##
 ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##
 
-# TODO: Por ahora la función no realiza escalonamientos de cuerpos finitos
 ##
 #
 # FUNCTION: matrixGre
@@ -104,10 +109,11 @@ def syndromeDecoding(n, q, G, w):
 #   escalonada reducida
 # 
 # PARAM: G -> Matriz mxn
+# PARAM: q -> Primo representativo del cuerpo Fq del código C
 # RETURN: Ger -> (G row echelon) Matriz G en forma escalonada reducida
 #
 ##
-def matrixGre(G):
+def matrixGre(G, q):
 
     m = len(G)
     n = len(G[0])
@@ -116,34 +122,48 @@ def matrixGre(G):
 
     # Matriz escalonada reducida
     lider = 0 # Representa el líder de cada fila
-    # Realizamos un bucle por cada fila de G
+    # Realizamos un bucle por cada fila de G (que corresponderá a cada líder de fila)
     for row in range(m):
-        # Si el líder es mayor que el número de elementos de G, significa que la fila es todo 0's
-        # y pasamos a la siguiente fila
+        # Si el líder es mayor o igual que el número de elementos de cada fila deG, salimos del
+        # bucle
         if n <= lider:
             break
         i = row
+        # Para cada fila, buscamos el líder por columna de arriba a abajo (a partir de la fila en
+        # la que estamos), y por fila de dercha a izquierda, será el primer elemento distinto de 0
         while Gre[i][lider] == 0:
             i += 1
+            # Si m es igual a i pasamos a la siguiente columna desde la fila en la que estamos
             if m == i:
                 i = row
                 lider += 1
+                # Si el líder es igual al número de elementos de cada fila de G, salimos del bucle
                 if n == lider:
                     break
+        # Si el líder es igual al número de elementos de cada fila de G, salimos del bucle
         if n == lider:
             break
+        # Si la fila en la que hemos encontrado el líder no es la fila en la que estamos
+        # actualmente, intercambiamos ambas filas
         if i != row:
             Gre[i], Gre[row] = Gre[row], Gre[i]
-        li = Gre[row][lider]
+        li = Gre[row][lider]    # li es el líder (número) de la fila en la que estamos
+        invli = pow(li, -1, q)  # invli es el inverso multiplicativo del líder módulo q
+        # Normalizamos la fila en la que estamos (hacemos que el líder sea 1)
         for a in range(n):
-            # TODO: Aquí hay que definir el inverso multiplicativo, no dividir!!!
-            # TODO: Hay que poner un int(---) delante de la división para que los numeros que aparecen en H sean int
-            Gre[row][a] /= li
+            Gre[row][a] *= invli
+            Gre[row][a] %= q
+        # Realizamos un bucle por cada fila en G
         for j in range(m):
             if j != row:
-                li = Gre[j][lider]
+                # Si no estamos en nuestra fila cogemos el número de la misma columna del líder
+                num = Gre[j][lider]
+                # Hacemos la diferencia de la fila en la que estamos menos la fila del líder por
+                # num (para que el resto de los números de la columna del líder sean 0)
                 for a in range(n):
-                    Gre[j][a] -= li*Gre[row][a]
+                    Gre[j][a] -= num*Gre[row][a]
+                    Gre[j][a] %= q
+        # Sumamos 1 al líder (el siguiente no puede estar en la misma columna)
         lider += 1
     
     # Quitamos las filas de todo 0's
@@ -165,7 +185,6 @@ def matrixGre(G):
 
     return Gre
 
-# TODO: Por ahora la función no calcula matriz H de cuerpos finitos
 ##
 #
 # FUNCTION: matrixH
@@ -174,26 +193,31 @@ def matrixGre(G):
 #   su matriz de paridad H
 # 
 # PARAM: G -> Matriz generadora del código C
+# PARAM: q -> Primo representativo del cuerpo Fq del código C
 # RETURN: H -> Matriz de paridad del código C
 #
 ##
-def matrixH(G):
+def matrixH(G, q):
 
     # Matriz escalonada reducida
-    Gre = matrixGre(G)
+    Gre = matrixGre(G, q)
 
     # Matriz en forma estándar Ges=Gre' (sabiendo las columnas a cambiar)
     m = len(Gre)
     n = len(Gre[0])
 
-    swiped_columns = {}
+    swiped_columns = {} # Diccionario conteniendo las columnas a cambiar en Gre para pasar a una
+                        # matriz en forma estándar
 
+    # Hacemos un bucle por cada fila de Gre
     for i in range(m):
         lider = 0
+        # Buscamos la posición del líder de una fila dada
         for number in Gre[i]:
             if number == 1:
                 break
-            lider = lider + 1
+            lider += 1
+        # Si el líder no esta en la posición G[i][i] para la fila i, intercambiamos las columnas
         if i != lider:
             swiped_columns[i] = lider
             for a in range(m):
@@ -202,10 +226,11 @@ def matrixH(G):
     # Matriz Ger=[I|A], sacamos A y hacemos -A^t
     At = []
 
-    for j in range(n-m):
+    # Sacamos la menos traspuesta de la matriz A
+    for j in range(m, n):
         At.append([])
         for i in range(m):
-            At[j].append(-Gre[i][j+m]%2)
+            At[j].append(-Gre[i][j]%q)
 
     # Construimos H como H=[-A^t|I]
     H=At
@@ -221,7 +246,7 @@ def matrixH(G):
             else:
                 H[i].append(0)
 
-    # Cambiamos las columnas swiped_columns
+    # Cambiamos las columnas swiped_columns para que se corresponda con la matriz de paridad de G
     for key in swiped_columns:
         for a in range(m):
             H[a][key], H[a][swiped_columns[key]] = H[a][swiped_columns[key]], H[a][key]
@@ -246,13 +271,13 @@ def matrixH(G):
 #   siguiente combinación de elementos junto con el número de elementos distintos de 0 de la nueva
 #   combinación.
 # 
-# PARAM: q -> Número siguiente al máximo que cada número dentro de la combinación puede alcanzar
 # PARAM: lista -> Lista conteniendo la combinación actual
+# PARAM: q -> Número siguiente al máximo que cada número dentro de la combinación puede alcanzar
 # RETURN: listaret -> Lista conteniendo la siguiente combinación en el orden correspondiente
 #         x -> Número de elementos distintos de 0 en la combinación devuelta
 #
 ##
-def nextCombination(q, lista):
+def nextCombination(lista, q):
 
     x = 0   # Indica el número de elementos distintos de 0 en lista
     for number in lista:
@@ -261,7 +286,7 @@ def nextCombination(q, lista):
 
     n = len(lista)
     
-    leftmost = 0    # Indica el número de elementos distitos de 0 a la izquierda
+    rightmost = 0    # Indica el número de elementos distitos de 0 a la derecha
     # Realizamos un bucle por cada número distinto de 0
     for m in range(x):
         # Miramos de derecha a izquierda (desde el subconjunto n-m-1)
@@ -270,8 +295,8 @@ def nextCombination(q, lista):
             if lista[i] != 0:
                 # Miramos si el número está al final del todo (de nuestro subconjunto)
                 if i != n-m-1:
-                    if leftmost == 0:
-                        # Si leftmost es 0 podemos hacer 2 cosas:
+                    if rightmost == 0:
+                        # Si rightmost es 0 podemos hacer 2 cosas:
                         # Si el elemento es distinto de q-1 sumamos 1
                         if lista[i] != q-1:
                             lista[i] += 1
@@ -281,18 +306,23 @@ def nextCombination(q, lista):
                             lista[i], lista[i+1] = lista[i+1], lista[i]
                     else:
                         if lista[i] != q-1:
-                            # Si leftmost no es 0 pero nuestro elemento es distinto de q-1 sumamos
+                            # Si rightmost no es 0 pero nuestro elemento es distinto de q-1 sumamos
                             # 1
                             lista[i] += 1
-                            # Ahora reestablecemos los 
-                            for l in range(leftmost):
-                                lista[i+1+l], lista[n-leftmost+l] = lista[n-leftmost+l], lista[i+1+l]
+                            # Ahora reestablecemos los números que están a la derecha del todo a
+                            # su posición original a la izquierda
+                            for l in range(rightmost):
+                                lista[i+1+l], lista[n-rightmost+l] = lista[n-rightmost+l], lista[i+1+l]
                                 lista[i+1+l] = 1
                         else:
+                            # Si rightmost no es 0 y nuestro elementos es q-1, avanzamos una
+                            # posición a ese número y lo reestablecemos a 1
                             lista[i] = 1
                             lista[i], lista[i+1] = lista[i+1], lista[i]
-                            for l in range(leftmost):
-                                lista[i+2+l], lista[n-leftmost+l] = lista[n-leftmost+l], lista[i+2+l]
+                            # Ahora reestablecemos los números que están a la derecha del todo a
+                            # su posición original a la izquierda más 1
+                            for l in range(rightmost):
+                                lista[i+2+l], lista[n-rightmost+l] = lista[n-rightmost+l], lista[i+2+l]
                                 lista[i+2+l] = 1
                     return lista, x
                 else:
@@ -300,23 +330,23 @@ def nextCombination(q, lista):
                     if lista[i] != q-1:
                         lista[i] += 1
                         return lista, x
-                    # Si está al final del todo sumamos 1 a leftmost (número a la izquierda) y
+                    # Si está al final del todo sumamos 1 a rightmost (número a la izquierda) y
                     # salimos del bucle
-                    leftmost += 1
+                    rightmost += 1
                     break
     
-    # Si leftmost es igual al tamaño del vector, hemos terminado
-    if leftmost == n:
+    # Si rightmost es igual al tamaño del vector, hemos terminado
+    if rightmost == n:
         return None, x
 
-    # Si leftmost es igual al número de variables añadimos un nuevo número
-    if leftmost == x:
+    # Si rightmost es igual al número de variables añadimos un nuevo número
+    if rightmost == x:
         listaret = []
-        for _ in range(leftmost+1):
+        for _ in range(rightmost+1):
             listaret.append(1)
-        for _ in range(n-leftmost-1):
+        for _ in range(n-rightmost-1):
             listaret.append(0)
-        return listaret, x
+        return listaret, x+1
     
     return lista, x
 
@@ -328,24 +358,25 @@ def nextCombination(q, lista):
 #   distancia
 # 
 # PARAM: H -> Matriz de paridad del código C
+# PARAM: q -> Primo representativo del cuerpo Fq del código C
 # RETURN: d -> Distancia del código C
 #
 ##
-def distanceC(H):
+def distanceC(H, q):
 
     m = len(H)
     n = len(H[0])
 
     d = m + 1
-    q = 2
 
+    # Creamos la primera combinación de columnas para comprobar si son linealmente dependientes
     lista = [1,1]
     for _ in range(2,n):
         lista.append(0)
     
     nlista = 2
 
-    # Comprobamos si la distancai es 1 (ver si hay alguna columna 0 en H)
+    # Comprobamos si la distancia es 1 (ver si hay alguna columna 0 en H)
     for j in range(n):
         if H[0][j]%q == 0:
             zerocol = 1
@@ -360,23 +391,53 @@ def distanceC(H):
 
     # Comprobamos si la distancia es 2 o más
     if d != 1:
+        # Hacemos un bucle mientras el número de combinaciones de columnas que miramos sea menor o
+        # igual que m (número de filas)
         while nlista < m+1:
             nceros = 0
+            # Hacemos un bucle para comprobar si la combinación actual de columnas es linealmente
+            # dependiente
             for i in range(m):
                 sum = 0
                 for j in range(n):
                     if lista[j] != 0:
                         sum += lista[j]*H[i][j]
-                if sum%2 == 0:
+                # Si la combinación lineal de los elementos módulo q es 0, sumamos un 0 a nceros
+                if sum%q == 0:
                     nceros += 1
             
+            # Si nceros coincide con el número de filas de la matriz H implica que la combinación
+            # de columnas escogida es linealmente dependiente, por lo tanto el número de columnas
+            # de la combinación es la distancia del código (pues es el mínimo número de columnas
+            # al haber ido de menos a más). Igualamos a d y salimos del bucle
             if nceros == m:
                 d = nlista
                 break
 
-            lista, nlista = nextCombination(q, lista)
+            # Pasamos a la siguiente cobinación de columnas
+            lista, nlista = nextCombination(lista, q)
     
     return d
+
+
+##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##
+##                                                                                              ##
+##                               CÁLCULO DE TABLA DE SÍNDROMES                                  ##
+##                                                                                              ##
+##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##
+
+def syndromeTable(H):
+    return
+
+
+##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##
+##                                                                                              ##
+##                                DECODIFICACIÓN DE PALABRAS                                    ##
+##                                                                                              ##
+##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##
+
+def wordDecoding(w):
+    return
 
 
 ##################################################################################################
@@ -392,13 +453,13 @@ def distanceC(H):
 # DESCRIPTION: Matriz que recibe una matriz generadora G de un código C y su matriz de paridad H y
 #   comprueba si es correcta
 # 
-# PARAM: q -> Primo representativo del cuerpo Fq del código
 # PARAM: G -> Matriz generadora del código C
 # PARAM: H -> Matriz de paridad del código C
+# PARAM: q -> Primo representativo del cuerpo Fq del código C
 # RETURN: True si H es la matriz de paridad de G. False si no lo es
 #
 ##
-def isParityMatrix(q, G, H):
+def isParityMatrix(G, H, q):
     
     m = len(G)
     n = len(G[0])
@@ -407,12 +468,17 @@ def isParityMatrix(q, G, H):
 
     for Grow in range(m):
         for Hrow in range(len(H)):
+            # Para cada fila de G y para cada fila de H multiplicamos sus elementos
             sum = 0
             for j in range(n):
+                # Realizamos la suma de la mutliplicación de la fila de G por la de H
                 sum += G[Grow][j]*H[Hrow][j]
+            # Si la suma módulo q no es cero devolvemos False
             if sum%q != 0:
                 return False
+            # Sumamos sum a sumtotal
             sumtotal += sum
     
+    # Si la suma total (sumtotal) módulo q es cero devolvemos False
     if sumtotal%q == 0:
         return True

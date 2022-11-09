@@ -1,9 +1,12 @@
 def main():
 
-    G = [[1,0,0,0,0,0,0,1,1,0,0],[0,1,0,0,0,0,0,1,0,1,0],[0,0,1,0,0,0,0,0,1,1,0],[0,0,0,1,0,0,0,1,1,1,1],[0,0,0,0,1,0,0,1,1,0,1],[0,0,0,0,0,1,0,0,1,0,1],[0,0,0,0,0,0,1,1,0,0,1]]
+    G = [[1,2,0,2,1,0],[2,0,1,2,0,1],[1,1,1,2,1,2]]
 
     m = len(G)
     n = len(G[0])
+
+    #!!MUY IMPORTANTE
+    q = 3
 
     Ger = [G[row].copy() for row in range(m)]
 
@@ -26,13 +29,16 @@ def main():
         if i != r:
             Ger[i], Ger[r] = Ger[r], Ger[i]
         li = Ger[r][lider]
+        invli = pow(li, -1, q)
         for a in range(n):
-            Ger[r][a] /= li
+            Ger[r][a] *= invli
+            Ger[r][a] %= q
         for j in range(m):
             if j != r:
                 li = Ger[j][lider]
                 for a in range(n):
                     Ger[j][a] -= li*Ger[r][a]
+                    Ger[j][a] %= q
         lider += 1
     
     # Quitamos las columnas de todo 0
@@ -50,8 +56,8 @@ def main():
     for row in remove:
         Ger.pop(row)
 
-    print(G)
-    print(Ger)
+    print("G = " + str(G))
+    print("Ger = " + str(Ger))
 
     # Matriz en forma estándar Ges=Ger' (sabiendo las columnas a cambiar)
 
@@ -71,7 +77,7 @@ def main():
             for a in range(m):
                 Ger[a][i], Ger[a][lider] = Ger[a][lider], Ger[a][i]
 
-    print(Ger)
+    print("Ges = " + str(Ger))
     print(swiped_columns)
 
     # Matriz Ger=[I|A], sacamos A y hacemos -A^t
@@ -81,9 +87,7 @@ def main():
     for j in range(n-m):
         At.append([])
         for i in range(m):
-            At[j].append(-Ger[i][j+m]%2)
-
-    print(At)
+            At[j].append(-Ger[i][j+m]%q)
 
     # Construimos H como H=[-A^t|I]
 
@@ -99,7 +103,7 @@ def main():
             else:
                 H[i].append(0)
     
-    print(H)
+    print("H' = " + str(H))
 
     # Cambiamos las columnas swiped_columns
 
@@ -107,7 +111,7 @@ def main():
         for a in range(m):
             H[a][key], H[a][swiped_columns[key]] = H[a][swiped_columns[key]], H[a][key]
     
-    print(H)
+    print("H = " + str(H))
 
     # Veamos si la matriz H está bien
 
@@ -121,11 +125,11 @@ def main():
             sum = 0
             for j in range(n):
                 sum += G[Grow][j]*H[Hrow][j]
-            if sum%2 != 0:
+            if sum%q != 0:
                 print("NO ESTÁ BIEN :(\n")
             sumtotal += sum
     
-    if sumtotal%2 == 0:
+    if sumtotal%q == 0:
         print("ESTÁ BIEN!!! :)")
     
 
@@ -135,7 +139,6 @@ def main():
     n = len(H[0])
 
     d = m + 1
-    q = 2
 
     lista = [1,1]
     for _ in range(2,n):
@@ -145,13 +148,11 @@ def main():
 
     # Comprobamos si la distancai es 1 (ver si hay alguna columna 0 en H)
     for j in range(n):
-        if H[0][j]%q == 0:
+        if H[0][j] == 0%q:
             zerocol = 1
             for i in range(1, m):
-                if H[i][j]%q == 0:
+                if H[i][j] == 0%q:
                     zerocol += 1
-                else:
-                    break
             if zerocol == m:
                 d = 1
                 break
@@ -165,7 +166,7 @@ def main():
                 for j in range(n):
                     if lista[j] != 0:
                         sum += lista[j]*H[i][j]
-                if sum%2 == 0:
+                if sum%q == 0:
                     nceros += 1
             
             if nceros == m:
