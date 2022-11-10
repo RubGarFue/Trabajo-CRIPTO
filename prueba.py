@@ -57,8 +57,8 @@ def main():
         Gre.pop(row)
 
 
-    print("G = " + str(G))
-    print("Ger = " + str(Gre))
+    print("G = " + str(G) + "\n")
+    print("Ger = " + str(Gre) + "\n")
 
     # Matriz en forma estándar Ges=Ger' (sabiendo las columnas a cambiar)
     
@@ -78,8 +78,9 @@ def main():
             for a in range(m):
                 Gre[a][i], Gre[a][lider] = Gre[a][lider], Gre[a][i]
 
-    print("Ges = " + str(Gre))
+    print("Ges = " + str(Gre) + "\n")
     print(swiped_columns)
+    print("")
 
     # Matriz Ger=[I|A], sacamos A y hacemos -A^t
 
@@ -104,7 +105,7 @@ def main():
             else:
                 H[i].append(0)
     
-    print("H' = " + str(H))
+    print("H' = " + str(H) + "\n")
 
     # Cambiamos las columnas swiped_columns
 
@@ -112,7 +113,7 @@ def main():
         for a in range(m):
             H[a][key], H[a][swiped_columns[key]] = H[a][swiped_columns[key]], H[a][key]
 
-    print("H = " + str(H))
+    print("H = " + str(H) + "\n")
 
     # Veamos si la matriz H está bien
 
@@ -127,11 +128,11 @@ def main():
             for j in range(n):
                 sum += G[Grow][j]*H[Hrow][j]
             if sum%q != 0:
-                print("NO ESTÁ BIEN!!! :(")
+                print("NO ESTÁ BIEN!!! :(\n")
             sumtotal += sum
     
     if sumtotal%q == 0:
-        print("ESTÁ BIEN!!! :)")
+        print("ESTÁ BIEN!!! :)\n")
     
 
     # Sacamos la distancia del codigo C
@@ -178,7 +179,7 @@ def main():
 
             lista, nlista = nextCombination(lista, q)
 
-    print("La distancia del código d es " + str(d))
+    print("La distancia del código d es " + str(d) + "\n")
 
     # Sacamos la tabla de síndromes
     tabla = {}
@@ -189,35 +190,38 @@ def main():
     
     flag = 0
     nkey = 0
-    peso, oldpeso = 0, 0
-    while peso == oldpeso or flag == 0:
+    weight, oldweight = 0, 0
+    while weight == oldweight or flag == 0:
 
-        sindrome = []
+        syndrome = []
         for i in range(m):
             sum = 0
             for j in range(n):
                 sum += lider[j]*H[i][j]
-            sum %= q
-            sindrome.append(sum)
+            syndrome.append(sum%q)
         
-        key = tuple(sindrome)
+        key = tuple(syndrome)
 
         # Si el síndrome no está en la tabla, lo añadimos
         if key not in tabla:
             tabla[key] = [lider.copy()]
             nkey += 1
-            if nkey == q**m:
+            if nkey == m**q:
                 flag = 1
         
         # Si el síndrome está en la tabla
         else:
-            if peso <= weight(tabla[key][-1]):
+            if weight <= weight(tabla[key][-1]):
                 tabla[key].append(lider.copy())
         
-        oldpeso = peso
-        lider, peso = nextCombination(lider, q)
+        oldweight = weight
+        lider, weight = nextCombination(lider, q)
     
-    print("La tabla de síndromes es " + str(tabla))
+    print("La tabla de síndromes es:")
+    for key in tabla:
+        print(str(key) + " : " + str(tabla[key]))
+    
+    print("")
 
 
 
@@ -225,22 +229,22 @@ def main():
 
 
 def weight(lista):
-    x = 0  # Indica el número de elementos distintos de 0 en lista
+    w = 0  # Indica el número de elementos distintos de 0 en lista
     for number in lista:
         if number != 0:
-            x += 1
-    return x
+            w += 1
+    return w
 
 
 def nextCombination(lista, q):
 
-    x = weight(lista)
+    w = weight(lista)
 
     n = len(lista)
     
     rightmost = 0    # Indica el número de elementos distitos de 0 a la derecha
     # Realizamos un bucle por cada número distinto de 0
-    for m in range(x):
+    for m in range(w):
         # Miramos de derecha a izquierda (desde el subconjunto n-m-1)
         for i in range(n-m-1, -1, -1):
             # Miramos si es el número al que vamos a aplicar la permutación (es distinto de 0)
@@ -276,12 +280,12 @@ def nextCombination(lista, q):
                             for l in range(rightmost):
                                 lista[i+2+l], lista[n-rightmost+l] = lista[n-rightmost+l], lista[i+2+l]
                                 lista[i+2+l] = 1
-                    return lista, x
+                    return lista, w
                 else:
                     # Si está al final del todo pero es distinto de q-1 sumamos 1
                     if lista[i] != q-1:
                         lista[i] += 1
-                        return lista, x
+                        return lista, w
                     # Si está al final del todo sumamos 1 a rightmost (número a la izquierda) y
                     # salimos del bucle
                     rightmost += 1
@@ -289,18 +293,18 @@ def nextCombination(lista, q):
     
     # Si rightmost es igual al tamaño del vector, hemos terminado
     if rightmost == n:
-        return None, x
+        return None, w
 
     # Si rightmost es igual al número de variables añadimos un nuevo número
-    if rightmost == x:
+    if rightmost == w:
         listaret = []
         for _ in range(rightmost+1):
             listaret.append(1)
         for _ in range(n-rightmost-1):
             listaret.append(0)
-        return listaret, x+1
+        return listaret, w+1
     
-    return lista, x
+    return lista, w
 
 
 if __name__ == "__main__":

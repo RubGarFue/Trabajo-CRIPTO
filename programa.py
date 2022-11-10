@@ -264,18 +264,18 @@ def matrixH(G, q):
 #
 # FUNCTION: weight
 #
-# DESCRIPTION: Función que recibe como argumento un vector y devuelve su peso
+# DESCRIPTION: Función que recibe como argumento un vector y devuelve su weight
 # 
-# PARAM: lista -> Lector del que queremos calcular su peso
-# RETURN: x -> Peso del vector lista
+# PARAM: lista -> Lector del que queremos calcular su weight
+# RETURN: w -> weight del vector lista
 #
 ##
 def weight(lista):
-    x = 0   # Indica el número de elementos distintos de 0 en lista
+    w = 0   # Indica el número de elementos distintos de 0 en lista
     for number in lista:
         if number != 0:
-            x += 1
-    return x
+            w += 1
+    return w
 
 ##
 #
@@ -291,18 +291,18 @@ def weight(lista):
 # PARAM: lista -> Lista conteniendo la combinación actual
 # PARAM: q -> Número siguiente al máximo que cada número dentro de la combinación puede alcanzar
 # RETURN: listaret -> Lista conteniendo la siguiente combinación en el orden correspondiente
-#         x -> Número de elementos distintos de 0 en la combinación devuelta
+#         w -> Número de elementos distintos de 0 en la combinación devuelta
 #
 ##
 def nextCombination(lista, q):
 
-    x = weight(lista)   # Número de elementos distintos de 0 en lista
+    w = weight(lista)   # Número de elementos distintos de 0 en lista
 
     n = len(lista)
     
     rightmost = 0    # Indica el número de elementos distitos de 0 a la derecha
     # Realizamos un bucle por cada número distinto de 0
-    for m in range(x):
+    for m in range(w):
         # Miramos de derecha a izquierda (desde el subconjunto n-m-1)
         for i in range(n-m-1, -1, -1):
             # Miramos si es el número al que vamos a aplicar la permutación (es distinto de 0)
@@ -338,12 +338,12 @@ def nextCombination(lista, q):
                             for l in range(rightmost):
                                 lista[i+2+l], lista[n-rightmost+l] = lista[n-rightmost+l], lista[i+2+l]
                                 lista[i+2+l] = 1
-                    return lista, x
+                    return lista, w
                 else:
                     # Si está al final del todo pero es distinto de q-1 sumamos 1
                     if lista[i] != q-1:
                         lista[i] += 1
-                        return lista, x
+                        return lista, w
                     # Si está al final del todo sumamos 1 a rightmost (número a la izquierda) y
                     # salimos del bucle
                     rightmost += 1
@@ -351,18 +351,18 @@ def nextCombination(lista, q):
     
     # Si rightmost es igual al tamaño del vector, hemos terminado
     if rightmost == n:
-        return None, x
+        return None, w
 
     # Si rightmost es igual al número de variables añadimos un nuevo número
-    if rightmost == x:
+    if rightmost == w:
         listaret = []
         for _ in range(rightmost+1):
             listaret.append(1)
         for _ in range(n-rightmost-1):
             listaret.append(0)
-        return listaret, x+1
+        return listaret, w+1
     
-    return lista, x
+    return lista, w
 
 ##
 #
@@ -463,16 +463,16 @@ def syndromeTable(H, q):
     for _ in range(len(H)):
         lider.append(0)
     
-    flag, nkey, peso, oldpeso = 0, 0, 0, 0
-    while flag == 0 or peso == oldpeso:
-        sindrome = []
+    flag, nkey, weight, oldweight = 0, 0, 0, 0
+    while flag == 0 or weight == oldweight:
+        syndrome = []
         for i in range(m):
             sum = 0
             for j in range(n):
                 sum += lider[j]*H[i][j]
-            sindrome.append(sum%q)
+            syndrome.append(sum%q)
     
-    key = tuple(sindrome)
+    key = tuple(syndrome)
 
     if key not in syndromes:
         syndromes[key] = [lider.copy()]
@@ -481,11 +481,11 @@ def syndromeTable(H, q):
             flag = 1
     
     else:
-        if peso <= weight(syndromes[key][-1]):
+        if weight <= weight(syndromes[key][-1]):
             syndromes[key].append(lider.copy())
     
-    oldpeso = peso
-    lider, peso = nextCombination(lider, q)
+    oldweight = weight
+    lider, weight = nextCombination(lider, q)
 
     return syndromes
 
@@ -496,8 +496,53 @@ def syndromeTable(H, q):
 ##                                                                                              ##
 ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##
 
-def wordDecoding(w):
-    return
+##
+#
+# FUNCTION: wordDecoding
+#
+# DESCRIPTION: Función que recibe como argumento una palabra y la tabla de síndromes de un código C
+#   y devuelve la palabra decodificada
+# 
+# PARAM: w -> Lista de palabras a decodificar
+# PARAM: H -> Matriz de paridad del código C
+# PARAM: syndromes -> Tabla de síndromes del código C
+# PARAM: q -> Primo representativo del cuerpo Fq del código C
+# RETURN: dw -> Lista de palabras decodificadas
+#
+##
+def wordDecoding(w, H, syndromes, q):
+
+    dw = []
+
+    m = len(H)
+    n = len(H[0])
+
+    for word in w:
+        dw.append([])
+        syndrome = []
+
+        for i in range(m):
+            sum = 0
+            for j in range(n):
+                sum += word[j]*H[i][j]
+            syndrome.append(sum%q)
+        
+        syndrome = tuple(syndrome)
+
+        listerror = syndromes[syndrome]
+
+        if len(listerror) == 1:
+            for e1, e2 in zip(word, listerror[0]):
+                dw[-1].append((e1-e2)%q)
+        
+        else:
+            for error in listerror:
+                dw[-1].append([])
+                for i in range(n):
+                    for e1, e2 in zip(word, error):
+                        dw[-1][-1].append((e1-e2)%q)
+    
+    return dw
 
 
 ##################################################################################################
