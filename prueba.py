@@ -180,15 +180,61 @@ def main():
 
     print("La distancia del código d es " + str(d))
 
+    # Sacamos la tabla de síndromes
+    tabla = {}
+    
+    lider = []
+    for _ in range(n):
+        lider.append(0)
+    
+    flag = 0
+    nkey = 0
+    peso, oldpeso = 0, 0
+    while peso == oldpeso or flag == 0:
+
+        sindrome = []
+        for i in range(m):
+            sum = 0
+            for j in range(n):
+                sum += lider[j]*H[i][j]
+            sum %= q
+            sindrome.append(sum)
+        
+        key = tuple(sindrome)
+
+        # Si el síndrome no está en la tabla, lo añadimos
+        if key not in tabla:
+            tabla[key] = [lider.copy()]
+            nkey += 1
+            if nkey == q**m:
+                flag = 1
+        
+        # Si el síndrome está en la tabla
+        else:
+            if peso <= weight(tabla[key][-1]):
+                tabla[key].append(lider.copy())
+        
+        oldpeso = peso
+        lider, peso = nextCombination(lider, q)
+    
+    print("La tabla de síndromes es " + str(tabla))
+
+
+
     return
+
+
+def weight(lista):
+    x = 0  # Indica el número de elementos distintos de 0 en lista
+    for number in lista:
+        if number != 0:
+            x += 1
+    return x
 
 
 def nextCombination(lista, q):
 
-    x = 0   # Indica el número de elementos distintos de 0 en lista
-    for number in lista:
-        if number != 0:
-            x += 1
+    x = weight(lista)
 
     n = len(lista)
     

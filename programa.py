@@ -42,7 +42,7 @@ Salida:
 # PARAM: w -> Lista de palabras recibidas del código C
 # RETURN: H -> Matriz de paridad H del código C
 #         d -> Distancia del código C
-#         t -> Tabla incompleta de síndromes
+#         s -> Tabla incompleta de síndromes
 #         dw -> (decoded words), palabras recibidas corregidas
 #
 ##
@@ -81,12 +81,12 @@ def syndromeDecoding(G, q, n, w):
     d = distanceC(H, q)
 
     # Sacamos la tabla de síndromes
-    t = syndromeTable(H, q)
+    s = syndromeTable(H, q)
 
     # Decodificamos las palabras
     dw = wordDecoding(w, q)
 
-    return H, d, t, dw
+    return H, d, s, dw
 
 
 ##################################################################################################
@@ -262,6 +262,23 @@ def matrixH(G, q):
 
 ##
 #
+# FUNCTION: weight
+#
+# DESCRIPTION: Función que recibe como argumento un vector y devuelve su peso
+# 
+# PARAM: lista -> Lector del que queremos calcular su peso
+# RETURN: x -> Peso del vector lista
+#
+##
+def weight(lista):
+    x = 0   # Indica el número de elementos distintos de 0 en lista
+    for number in lista:
+        if number != 0:
+            x += 1
+    return x
+
+##
+#
 # FUNCTION: nextCombination
 #
 # DESCRIPTION: Función que recibe como argumento una lisita con l elementos distintos de 0. La
@@ -279,10 +296,7 @@ def matrixH(G, q):
 ##
 def nextCombination(lista, q):
 
-    x = 0   # Indica el número de elementos distintos de 0 en lista
-    for number in lista:
-        if number != 0:
-            x += 1
+    x = weight(lista)   # Número de elementos distintos de 0 en lista
 
     n = len(lista)
     
@@ -426,8 +440,54 @@ def distanceC(H, q):
 ##                                                                                              ##
 ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##
 
-def syndromeTable(H):
-    return
+##
+#
+# FUNCTION: syndromeTable
+#
+# DESCRIPTION: Función que recibe como argumento la matriz de paridad de un código C y devuelve su
+#   tabla de síndromes
+# 
+# PARAM: H -> Matriz de paridad del código C
+# PARAM: q -> Primo representativo del cuerpo Fq del código C
+# RETURN: syndromes -> Tabla de síndromes del código C
+#
+##
+def syndromeTable(H, q):
+    
+    m = len(H)
+    n = len(H[0])
+
+    syndromes = {}
+
+    lider = []
+    for _ in range(len(H)):
+        lider.append(0)
+    
+    flag, nkey, peso, oldpeso = 0, 0, 0, 0
+    while flag == 0 or peso == oldpeso:
+        sindrome = []
+        for i in range(m):
+            sum = 0
+            for j in range(n):
+                sum += lider[j]*H[i][j]
+            sindrome.append(sum%q)
+    
+    key = tuple(sindrome)
+
+    if key not in syndromes:
+        syndromes[key] = [lider.copy()]
+        nkey += 1
+        if nkey == q**m:
+            flag = 1
+    
+    else:
+        if peso <= weight(syndromes[key][-1]):
+            syndromes[key].append(lider.copy())
+    
+    oldpeso = peso
+    lider, peso = nextCombination(lider, q)
+
+    return syndromes
 
 
 ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##
