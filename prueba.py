@@ -2,51 +2,51 @@ def main():
 
     G = [[1,2,0,2,1,0],[2,0,1,2,0,1],[1,1,1,2,1,2]]
 
-    m = len(G)
-    n = len(G[0])
-
     #!!MUY IMPORTANTE
     q = 3
 
-    Ger = [G[row].copy() for row in range(m)]
-
     # Matriz escalonada reducida
 
+    m = len(G)
+    n = len(G[0])
+
+    Gre = [G[row].copy() for row in range(m)]
+
+    # Matriz escalonada reducida
     lider = 0
-    for r in range(m):
+    for row in range(m):
         if n <= lider:
             break
-        i = r
-        while Ger[i][lider] == 0:
+        i = row
+        while Gre[i][lider] == 0:
             i += 1
             if m == i:
-                i = r
+                i = row
                 lider += 1
                 if n == lider:
                     break
         if n == lider:
             break
-        if i != r:
-            Ger[i], Ger[r] = Ger[r], Ger[i]
-        li = Ger[r][lider]
+        if i != row:
+            Gre[i], Gre[row] = Gre[row], Gre[i]
+        li = Gre[row][lider]
         invli = pow(li, -1, q)
         for a in range(n):
-            Ger[r][a] *= invli
-            Ger[r][a] %= q
+            Gre[row][a] *= invli
+            Gre[row][a] %= q
         for j in range(m):
-            if j != r:
-                li = Ger[j][lider]
+            if j != row:
+                num = Gre[j][lider]
                 for a in range(n):
-                    Ger[j][a] -= li*Ger[r][a]
-                    Ger[j][a] %= q
+                    Gre[j][a] -= num*Gre[row][a]
+                    Gre[j][a] %= q
         lider += 1
     
-    # Quitamos las columnas de todo 0
-
+    # Quitamos las filas de todo 0's
     remove = []
     for i in range(m):
         counter = 0
-        for number in Ger[i]:
+        for number in Gre[i]:
             if number != 0:
                 break
             counter += 1
@@ -54,30 +54,31 @@ def main():
             remove.append(i)
     
     for row in remove:
-        Ger.pop(row)
+        Gre.pop(row)
+
 
     print("G = " + str(G))
-    print("Ger = " + str(Ger))
+    print("Ger = " + str(Gre))
 
     # Matriz en forma estándar Ges=Ger' (sabiendo las columnas a cambiar)
-
-    m = len(Ger)
-    n = len(Ger[0])
+    
+    m = len(Gre)
+    n = len(Gre[0])
 
     swiped_columns = {}
 
     for i in range(m):
         lider = 0
-        for number in Ger[i]:
+        for number in Gre[i]:
             if number == 1:
                 break
-            lider = lider + 1
+            lider += 1
         if i != lider:
             swiped_columns[i] = lider
             for a in range(m):
-                Ger[a][i], Ger[a][lider] = Ger[a][lider], Ger[a][i]
+                Gre[a][i], Gre[a][lider] = Gre[a][lider], Gre[a][i]
 
-    print("Ges = " + str(Ger))
+    print("Ges = " + str(Gre))
     print(swiped_columns)
 
     # Matriz Ger=[I|A], sacamos A y hacemos -A^t
@@ -87,7 +88,7 @@ def main():
     for j in range(n-m):
         At.append([])
         for i in range(m):
-            At[j].append(-Ger[i][j+m]%q)
+            At[j].append(-Gre[i][j+m]%q)
 
     # Construimos H como H=[-A^t|I]
 
@@ -110,7 +111,7 @@ def main():
     for key in swiped_columns:
         for a in range(m):
             H[a][key], H[a][swiped_columns[key]] = H[a][swiped_columns[key]], H[a][key]
-    
+
     print("H = " + str(H))
 
     # Veamos si la matriz H está bien
@@ -126,7 +127,7 @@ def main():
             for j in range(n):
                 sum += G[Grow][j]*H[Hrow][j]
             if sum%q != 0:
-                print("NO ESTÁ BIEN :(\n")
+                print("NO ESTÁ BIEN!!! :(")
             sumtotal += sum
     
     if sumtotal%q == 0:
@@ -148,11 +149,13 @@ def main():
 
     # Comprobamos si la distancai es 1 (ver si hay alguna columna 0 en H)
     for j in range(n):
-        if H[0][j] == 0%q:
+        if H[0][j]%q == 0:
             zerocol = 1
             for i in range(1, m):
-                if H[i][j] == 0%q:
+                if H[i][j]%q == 0:
                     zerocol += 1
+                else:
+                    break
             if zerocol == m:
                 d = 1
                 break
@@ -173,23 +176,23 @@ def main():
                 d = nlista
                 break
 
-            lista, nlista = nextCombination(q, lista)
+            lista, nlista = nextCombination(lista, q)
 
     print("La distancia del código d es " + str(d))
 
     return
 
 
-def nextCombination(q, lista):
+def nextCombination(lista, q):
 
-    x = 0
+    x = 0   # Indica el número de elementos distintos de 0 en lista
     for number in lista:
         if number != 0:
             x += 1
 
     n = len(lista)
     
-    leftmost = 0 # Indica el numero de números distitos de 0 a la izquierda
+    rightmost = 0    # Indica el número de elementos distitos de 0 a la derecha
     # Realizamos un bucle por cada número distinto de 0
     for m in range(x):
         # Miramos de derecha a izquierda (desde el subconjunto n-m-1)
@@ -198,8 +201,8 @@ def nextCombination(q, lista):
             if lista[i] != 0:
                 # Miramos si el número está al final del todo (de nuestro subconjunto)
                 if i != n-m-1:
-                    if leftmost == 0:
-                        # Si leftmost es 0 podemos hacer 2 cosas:
+                    if rightmost == 0:
+                        # Si rightmost es 0 podemos hacer 2 cosas:
                         # Si el elemento es distinto de q-1 sumamos 1
                         if lista[i] != q-1:
                             lista[i] += 1
@@ -209,17 +212,23 @@ def nextCombination(q, lista):
                             lista[i], lista[i+1] = lista[i+1], lista[i]
                     else:
                         if lista[i] != q-1:
-                            # Si leftmost no es 0 pero nuestro elemento es distinto de q-1 sumamos 1
+                            # Si rightmost no es 0 pero nuestro elemento es distinto de q-1 sumamos
+                            # 1
                             lista[i] += 1
-                            # Ahora reestablecemos los 
-                            for l in range(leftmost):
-                                lista[i+1+l], lista[n-leftmost+l] = lista[n-leftmost+l], lista[i+1+l]
+                            # Ahora reestablecemos los números que están a la derecha del todo a
+                            # su posición original a la izquierda
+                            for l in range(rightmost):
+                                lista[i+1+l], lista[n-rightmost+l] = lista[n-rightmost+l], lista[i+1+l]
                                 lista[i+1+l] = 1
                         else:
+                            # Si rightmost no es 0 y nuestro elementos es q-1, avanzamos una
+                            # posición a ese número y lo reestablecemos a 1
                             lista[i] = 1
                             lista[i], lista[i+1] = lista[i+1], lista[i]
-                            for l in range(leftmost):
-                                lista[i+2+l], lista[n-leftmost+l] = lista[n-leftmost+l], lista[i+2+l]
+                            # Ahora reestablecemos los números que están a la derecha del todo a
+                            # su posición original a la izquierda más 1
+                            for l in range(rightmost):
+                                lista[i+2+l], lista[n-rightmost+l] = lista[n-rightmost+l], lista[i+2+l]
                                 lista[i+2+l] = 1
                     return lista, x
                 else:
@@ -227,24 +236,25 @@ def nextCombination(q, lista):
                     if lista[i] != q-1:
                         lista[i] += 1
                         return lista, x
-                    # Si está al final del todo sumamos 1 a leftmost (número a la izquierda) y salimos del bucle
-                    leftmost += 1
+                    # Si está al final del todo sumamos 1 a rightmost (número a la izquierda) y
+                    # salimos del bucle
+                    rightmost += 1
                     break
     
-    # Si leftmost es igual al tamaño del vector, hemos terminado
-    if leftmost == n:
+    # Si rightmost es igual al tamaño del vector, hemos terminado
+    if rightmost == n:
         return None, x
 
-    # Si leftmost es igual al número de variables añadimos un nuevo número
-    if leftmost == x:
+    # Si rightmost es igual al número de variables añadimos un nuevo número
+    if rightmost == x:
         listaret = []
-        for _ in range(leftmost+1):
+        for _ in range(rightmost+1):
             listaret.append(1)
-        for _ in range(n-leftmost-1):
+        for _ in range(n-rightmost-1):
             listaret.append(0)
         return listaret, x+1
     
-    return lista
+    return lista, x
 
 
 if __name__ == "__main__":

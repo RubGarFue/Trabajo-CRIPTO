@@ -121,7 +121,7 @@ def matrixGre(G, q):
     Gre = [G[row].copy() for row in range(m)]
 
     # Matriz escalonada reducida
-    lider = 0 # Representa el líder de cada fila
+    lider = 0   # Representa el líder de cada fila
     # Realizamos un bucle por cada fila de G (que corresponderá a cada líder de fila)
     for row in range(m):
         # Si el líder es mayor o igual que el número de elementos de cada fila deG, salimos del
@@ -227,10 +227,10 @@ def matrixH(G, q):
     At = []
 
     # Sacamos la menos traspuesta de la matriz A
-    for j in range(m, n):
+    for j in range(n-m):
         At.append([])
         for i in range(m):
-            At[j].append(-Gre[i][j]%q)
+            At[j].append(-Gre[i][j+m]%q)
 
     # Construimos H como H=[-A^t|I]
     H=At
