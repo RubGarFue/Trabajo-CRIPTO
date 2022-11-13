@@ -1,26 +1,14 @@
 ##
 #
-# FILE:
-# AUTHOR:
-# DATE:
+# FILE: programa.py
+# AUTHOR: Rubén García de la Fuente
+# DATE: 11/11/2022
 #
-# BRIEF:
+# BRIEF: Programa que recibe como argumento una matriz generadora G de un código C subespacio de
+#   Fq^n (junto con la q y la n), y una lista de palabras recibidas en dicho código y realiza la
+#   decodificación por síndrome de la misma.
 #
 ##
-
-'''Si quieres hacer algo de códigos, puedes intentar implementar la decodificación por síndrome.
-
-I.  Entrada:
-
-1. una matriz generadora G 
- 2. varias palabras (w_1,\ldots, w_k)
-
-Salida: 
-
-1. matriz de paridad H
-2. la distancia del código d
-3. la tabla de síndrome incompleta (que corrige d-1/2 errores)
-4. Decodificación de las palabras (w_1,\ldots, w_k) '''
 
 ##################################################################################################
 ##                                                                                              ##
@@ -47,10 +35,6 @@ Salida:
 #
 ##
 def syndromeDecoding(G, q, n, w):
-
-    # G es una matriz mxn
-
-    m = len(G)
 
     # Comprobamos que q sea un número primo
     if q <= 1:
@@ -84,7 +68,7 @@ def syndromeDecoding(G, q, n, w):
     s = syndromeTable(H, q)
 
     # Decodificamos las palabras
-    dw = wordDecoding(w, q)
+    dw = wordDecoding(w, H, s, q)
 
     return H, d, s, dw
 
@@ -264,10 +248,10 @@ def matrixH(G, q):
 #
 # FUNCTION: weight
 #
-# DESCRIPTION: Función que recibe como argumento un vector y devuelve su weight
+# DESCRIPTION: Función que recibe como argumento un vector y devuelve su peso
 # 
-# PARAM: lista -> Lector del que queremos calcular su weight
-# RETURN: w -> weight del vector lista
+# PARAM: lista -> Lector del que queremos calcular su peso
+# RETURN: w -> peso del vector lista
 #
 ##
 def weight(lista):
@@ -459,33 +443,48 @@ def syndromeTable(H, q):
 
     syndromes = {}
 
+    # Creamos el primer líder de clase
     lider = []
-    for _ in range(len(H)):
+    for _ in range(n):
         lider.append(0)
     
-    flag, nkey, weight, oldweight = 0, 0, 0, 0
-    while flag == 0 or weight == oldweight:
+
+    flag, nkey, w, oldw = 0, 0, 0, 0
+    # Mientras flag sea 0, es decir, mientras no hayamos encontrado todos los síndromes o no
+    # hayamos acabado con todos los líderes de peso x (es decir weight == oldweight)
+    while flag == 0 or w == oldw:
         syndrome = []
+        # Multiplicamos la combinación por la matriz de paridad (sacamos el síndrome)
         for i in range(m):
             sum = 0
             for j in range(n):
                 sum += lider[j]*H[i][j]
             syndrome.append(sum%q)
-    
-    key = tuple(syndrome)
+        
+        key = tuple(syndrome)
 
-    if key not in syndromes:
-        syndromes[key] = [lider.copy()]
-        nkey += 1
-        if nkey == q**m:
-            flag = 1
-    
-    else:
-        if weight <= weight(syndromes[key][-1]):
-            syndromes[key].append(lider.copy())
-    
-    oldweight = weight
-    lider, weight = nextCombination(lider, q)
+        # Si el síndrome no está en la tabla de síndromes lo añadimos
+        if key not in syndromes:
+            syndromes[key] = [lider.copy()]
+            # Sumamos 1 a nkey (número de síndromes)
+            nkey += 1
+            # Si nkey es igual al número de posibles síndromes, hemos acabado y ponemos flag a 1.
+            # Solo queda terminar con el resto de combinaciones del mismo peso para comprobar si
+            # alguna combinación es líder de clase
+            if nkey == q**m:
+                flag = 1
+        
+        # Si el síndrome ya está en la tabla de síndromes, comprobamos si la combinación es líder
+        # de clase (mirando que su peso sea menor o igual que la última combinación añadida)
+        else:
+            if w <= weight(syndromes[key][-1]):
+                syndromes[key].append(lider.copy())
+        
+        # Guardamos oldweight para comprobar si hemos acabado con los líderes de peso x (en cuyo
+        # caso salimos del bucle)
+        oldw = w
+        # Pasamos a la siguiente combinación
+        lider, w = nextCombination(lider, q)
 
     return syndromes
 
@@ -517,10 +516,12 @@ def wordDecoding(w, H, syndromes, q):
     m = len(H)
     n = len(H[0])
 
+    # Para cada palabra w
     for word in w:
         dw.append([])
         syndrome = []
 
+        # Calculamos el síndrome de la palabra
         for i in range(m):
             sum = 0
             for j in range(n):
@@ -529,18 +530,20 @@ def wordDecoding(w, H, syndromes, q):
         
         syndrome = tuple(syndrome)
 
+        # Sacamos los líderes de clase del síndrome
         listerror = syndromes[syndrome]
 
+        # Si únicamente hay un líder de clase, añadimos a dw la palabra decodificada
         if len(listerror) == 1:
             for e1, e2 in zip(word, listerror[0]):
                 dw[-1].append((e1-e2)%q)
         
+        # Si hay más de un líder de clase, añadimos a dw todas las posibles palabras decodificadas
         else:
             for error in listerror:
                 dw[-1].append([])
-                for i in range(n):
-                    for e1, e2 in zip(word, error):
-                        dw[-1][-1].append((e1-e2)%q)
+                for e1, e2 in zip(word, error):
+                    dw[-1][-1].append((e1-e2)%q)
     
     return dw
 
