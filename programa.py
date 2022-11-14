@@ -30,7 +30,7 @@
 # PARAM: w -> Lista de palabras recibidas del código C
 # RETURN: H -> Matriz de paridad H del código C
 #         d -> Distancia del código C
-#         s -> Tabla incompleta de síndromes
+#         s -> Tabla completa de síndromes
 #         dw -> (decoded words), palabras recibidas corregidas
 #
 ##
@@ -108,7 +108,7 @@ def matrixGre(G, q):
     lider = 0   # Representa el líder de cada fila
     # Realizamos un bucle por cada fila de G (que corresponderá a cada líder de fila)
     for row in range(m):
-        # Si el líder es mayor o igual que el número de elementos de cada fila deG, salimos del
+        # Si el líder es mayor o igual que el número de elementos de cada fila de G, salimos del
         # bucle
         if n <= lider:
             break
@@ -250,7 +250,7 @@ def matrixH(G, q):
 #
 # DESCRIPTION: Función que recibe como argumento un vector y devuelve su peso
 # 
-# PARAM: lista -> Lector del que queremos calcular su peso
+# PARAM: lista -> Vector del que queremos calcular su peso
 # RETURN: w -> peso del vector lista
 #
 ##
@@ -265,7 +265,7 @@ def weight(lista):
 #
 # FUNCTION: nextCombination
 #
-# DESCRIPTION: Función que recibe como argumento una lisita con l elementos distintos de 0. La
+# DESCRIPTION: Función que recibe como argumento una lista con l elementos distintos de 0. La
 #   función genera todas las posibles combinaciones de l elementos distintos de 0 y menores que q
 #   siguiendo un orden establecido, a continuación genera todas las posibles combinacioens de l+1
 #   elementos... También siguiendo un orden establecido. Dada una lista, la función devuelve la
@@ -451,7 +451,7 @@ def syndromeTable(H, q):
 
     flag, nkey, w, oldw = 0, 0, 0, 0
     # Mientras flag sea 0, es decir, mientras no hayamos encontrado todos los síndromes o no
-    # hayamos acabado con todos los líderes de peso x (es decir weight == oldweight)
+    # hayamos acabado con todos los líderes de peso x (es decir w == oldw)
     while flag == 0 or w == oldw:
         syndrome = []
         # Multiplicamos la combinación por la matriz de paridad (sacamos el síndrome)
