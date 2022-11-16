@@ -2,7 +2,7 @@
 #
 # FILE: prueba.py
 # AUTHOR: Rubén García de la Fuente
-# DATE: 11/11/2022
+# DATE: 25/10/2022
 #
 # BRIEF: Script de prueba para la función syndromeDecoding
 #

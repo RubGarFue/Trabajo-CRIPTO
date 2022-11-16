@@ -2,7 +2,7 @@
 #
 # FILE: programa.py
 # AUTHOR: Rubén García de la Fuente
-# DATE: 11/11/2022
+# DATE: 25/10/2022
 #
 # BRIEF: Programa que recibe como argumento una matriz generadora G de un código C subespacio de
 #   Fp^n (junto con la p y la n), y una lista de palabras recibidas en dicho código y realiza la
