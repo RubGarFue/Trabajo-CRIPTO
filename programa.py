@@ -5,7 +5,7 @@
 # DATE: 11/11/2022
 #
 # BRIEF: Programa que recibe como argumento una matriz generadora G de un código C subespacio de
-#   Fq^n (junto con la q y la n), y una lista de palabras recibidas en dicho código y realiza la
+#   Fp^n (junto con la p y la n), y una lista de palabras recibidas en dicho código y realiza la
 #   decodificación por síndrome de la misma.
 #
 ##
@@ -21,12 +21,12 @@
 # FUNCTION: syndromeDecoding
 #
 # DESCRIPTION: Función que recibe como argumento la matriz generadora G de un código C subespacio
-#   de Fq^n (junto con la q y la n), y una lista de palabras recibidas en dicho código y realiza
+#   de Fp^n (junto con la p y la n), y una lista de palabras recibidas en dicho código y realiza
 #   la decodificación por síndrome de la misma.
 # 
 # PARAM: G -> Matriz generadora del código C
-# PARAM: q -> Primo representativo del cuerpo Fq del código C
-# PARAM: n -> Número de elementos de Fq en las palabras del código
+# PARAM: p -> Primo representativo del cuerpo Fp del código C
+# PARAM: n -> Número de elementos de Fp en las palabras del código
 # PARAM: w -> Lista de palabras recibidas del código C
 # RETURN: H -> Matriz de paridad H del código C
 #         d -> Distancia del código C
@@ -34,41 +34,41 @@
 #         dw -> (decoded words), palabras recibidas corregidas
 #
 ##
-def syndromeDecoding(G, q, n, w):
+def syndromeDecoding(G, p, n, w):
 
-    # Comprobamos que q sea un número primo
-    if q <= 1:
-        print("ERROR: El número q ha de ser un número primo")
+    # Comprobamos que p sea un número primo
+    if p <= 1:
+        print("ERROR: El número p ha de ser un número primo")
         return
 
-    for num in range(2, int(q**0.5)+1):
-        if q%num == 0:
-            print("ERROR: El número q ha de ser un número primo")
+    for num in range(2, int(p**0.5)+1):
+        if p%num == 0:
+            print("ERROR: El número p ha de ser un número primo")
             return
     
-    # Comprobamos que G sea una matriz del cuerpo Fq^n
+    # Comprobamos que G sea una matriz del cuerpo Fp^n
     for row in G:
         if len(row) != n:
-            print("ERROR: El tamaño de las filas ha de coincidir con el cuerpo Fq^n")
+            print("ERROR: El tamaño de las filas ha de coincidir con el cuerpo Fp^n")
             return
     
-    # Comprobamos que las palabras w recibidas están en Fq^n
+    # Comprobamos que las palabras w recibidas están en Fp^n
     for word in w:
         if len(word) != n:
-            print("ERROR: El tamaño de las palabras ha de coincidir con el cuerpo Fq^n")
+            print("ERROR: El tamaño de las palabras ha de coincidir con el cuerpo Fp^n")
             return
     
     # Sacamos la matriz H
-    H = matrixH(G, q)
+    H = matrixH(G, p)
 
     # Sacamos la distancia d
-    d = distanceC(H, q)
+    d = distanceC(H, p)
 
     # Sacamos la tabla de síndromes
-    s = syndromeTable(H, q)
+    s = syndromeTable(H, p)
 
     # Decodificamos las palabras
-    dw = wordDecoding(w, H, s, q)
+    dw = wordDecoding(w, H, s, p)
 
     return H, d, s, dw
 
@@ -93,11 +93,11 @@ def syndromeDecoding(G, q, n, w):
 #   escalonada reducida
 # 
 # PARAM: G -> Matriz mxn
-# PARAM: q -> Primo representativo del cuerpo Fq del código C
+# PARAM: p -> Primo representativo del cuerpo Fp del código C
 # RETURN: Ger -> (G row echelon) Matriz G en forma escalonada reducida
 #
 ##
-def matrixGre(G, q):
+def matrixGre(G, p):
 
     m = len(G)
     n = len(G[0])
@@ -132,11 +132,11 @@ def matrixGre(G, q):
         if i != row:
             Gre[i], Gre[row] = Gre[row], Gre[i]
         li = Gre[row][lider]    # li es el líder (número) de la fila en la que estamos
-        invli = pow(li, -1, q)  # invli es el inverso multiplicativo del líder módulo q
+        invli = pow(li, -1, p)  # invli es el inverso multiplicativo del líder módulo p
         # Normalizamos la fila en la que estamos (hacemos que el líder sea 1)
         for a in range(n):
             Gre[row][a] *= invli
-            Gre[row][a] %= q
+            Gre[row][a] %= p
         # Realizamos un bucle por cada fila en G
         for j in range(m):
             if j != row:
@@ -146,7 +146,7 @@ def matrixGre(G, q):
                 # num (para que el resto de los números de la columna del líder sean 0)
                 for a in range(n):
                     Gre[j][a] -= num*Gre[row][a]
-                    Gre[j][a] %= q
+                    Gre[j][a] %= p
         # Sumamos 1 al líder (el siguiente no puede estar en la misma columna)
         lider += 1
     
@@ -177,14 +177,14 @@ def matrixGre(G, q):
 #   su matriz de paridad H
 # 
 # PARAM: G -> Matriz generadora del código C
-# PARAM: q -> Primo representativo del cuerpo Fq del código C
+# PARAM: p -> Primo representativo del cuerpo Fp del código C
 # RETURN: H -> Matriz de paridad del código C
 #
 ##
-def matrixH(G, q):
+def matrixH(G, p):
 
     # Matriz escalonada reducida
-    Gre = matrixGre(G, q)
+    Gre = matrixGre(G, p)
 
     # Matriz en forma estándar Ges=Gre' (sabiendo las columnas a cambiar)
     m = len(Gre)
@@ -214,7 +214,7 @@ def matrixH(G, q):
     for j in range(n-m):
         At.append([])
         for i in range(m):
-            At[j].append(-Gre[i][j+m]%q)
+            At[j].append(-Gre[i][j+m]%p)
 
     # Construimos H como H=[-A^t|I]
     H=At
@@ -266,19 +266,19 @@ def weight(lista):
 # FUNCTION: nextCombination
 #
 # DESCRIPTION: Función que recibe como argumento una lista con l elementos distintos de 0. La
-#   función genera todas las posibles combinaciones de l elementos distintos de 0 y menores que q
+#   función genera todas las posibles combinaciones de l elementos distintos de 0 y menores que p
 #   siguiendo un orden establecido, a continuación genera todas las posibles combinacioens de l+1
 #   elementos... También siguiendo un orden establecido. Dada una lista, la función devuelve la
 #   siguiente combinación de elementos junto con el número de elementos distintos de 0 de la nueva
 #   combinación.
 # 
 # PARAM: lista -> Lista conteniendo la combinación actual
-# PARAM: q -> Número siguiente al máximo que cada número dentro de la combinación puede alcanzar
+# PARAM: p -> Número siguiente al máximo que cada número dentro de la combinación puede alcanzar
 # RETURN: listaret -> Lista conteniendo la siguiente combinación en el orden correspondiente
 #         w -> Número de elementos distintos de 0 en la combinación devuelta
 #
 ##
-def nextCombination(lista, q):
+def nextCombination(lista, p):
 
     w = weight(lista)   # Número de elementos distintos de 0 en lista
 
@@ -295,16 +295,16 @@ def nextCombination(lista, q):
                 if i != n-m-1:
                     if rightmost == 0:
                         # Si rightmost es 0 podemos hacer 2 cosas:
-                        # Si el elemento es distinto de q-1 sumamos 1
-                        if lista[i] != q-1:
+                        # Si el elemento es distinto de p-1 sumamos 1
+                        if lista[i] != p-1:
                             lista[i] += 1
                         # Si no, avanzamos una posición reseteando el número
                         else:
                             lista[i] = 1
                             lista[i], lista[i+1] = lista[i+1], lista[i]
                     else:
-                        if lista[i] != q-1:
-                            # Si rightmost no es 0 pero nuestro elemento es distinto de q-1 sumamos
+                        if lista[i] != p-1:
+                            # Si rightmost no es 0 pero nuestro elemento es distinto de p-1 sumamos
                             # 1
                             lista[i] += 1
                             # Ahora reestablecemos los números que están a la derecha del todo a
@@ -313,7 +313,7 @@ def nextCombination(lista, q):
                                 lista[i+1+l], lista[n-rightmost+l] = lista[n-rightmost+l], lista[i+1+l]
                                 lista[i+1+l] = 1
                         else:
-                            # Si rightmost no es 0 y nuestro elementos es q-1, avanzamos una
+                            # Si rightmost no es 0 y nuestro elementos es p-1, avanzamos una
                             # posición a ese número y lo reestablecemos a 1
                             lista[i] = 1
                             lista[i], lista[i+1] = lista[i+1], lista[i]
@@ -324,8 +324,8 @@ def nextCombination(lista, q):
                                 lista[i+2+l] = 1
                     return lista, w
                 else:
-                    # Si está al final del todo pero es distinto de q-1 sumamos 1
-                    if lista[i] != q-1:
+                    # Si está al final del todo pero es distinto de p-1 sumamos 1
+                    if lista[i] != p-1:
                         lista[i] += 1
                         return lista, w
                     # Si está al final del todo sumamos 1 a rightmost (número a la izquierda) y
@@ -356,11 +356,11 @@ def nextCombination(lista, q):
 #   distancia
 # 
 # PARAM: H -> Matriz de paridad del código C
-# PARAM: q -> Primo representativo del cuerpo Fq del código C
+# PARAM: p -> Primo representativo del cuerpo Fp del código C
 # RETURN: d -> Distancia del código C
 #
 ##
-def distanceC(H, q):
+def distanceC(H, p):
 
     m = len(H)
     n = len(H[0])
@@ -376,10 +376,10 @@ def distanceC(H, q):
 
     # Comprobamos si la distancia es 1 (ver si hay alguna columna 0 en H)
     for j in range(n):
-        if H[0][j]%q == 0:
+        if H[0][j]%p == 0:
             zerocol = 1
             for i in range(1, m):
-                if H[i][j]%q == 0:
+                if H[i][j]%p == 0:
                     zerocol += 1
                 else:
                     break
@@ -400,8 +400,8 @@ def distanceC(H, q):
                 for j in range(n):
                     if lista[j] != 0:
                         sum += lista[j]*H[i][j]
-                # Si la combinación lineal de los elementos módulo q es 0, sumamos un 0 a nceros
-                if sum%q == 0:
+                # Si la combinación lineal de los elementos módulo p es 0, sumamos un 0 a nceros
+                if sum%p == 0:
                     nceros += 1
             
             # Si nceros coincide con el número de filas de la matriz H implica que la combinación
@@ -413,7 +413,7 @@ def distanceC(H, q):
                 break
 
             # Pasamos a la siguiente cobinación de columnas
-            lista, nlista = nextCombination(lista, q)
+            lista, nlista = nextCombination(lista, p)
     
     return d
 
@@ -432,11 +432,11 @@ def distanceC(H, q):
 #   tabla de síndromes
 # 
 # PARAM: H -> Matriz de paridad del código C
-# PARAM: q -> Primo representativo del cuerpo Fq del código C
+# PARAM: p -> Primo representativo del cuerpo Fp del código C
 # RETURN: syndromes -> Tabla de síndromes del código C
 #
 ##
-def syndromeTable(H, q):
+def syndromeTable(H, p):
     
     m = len(H)
     n = len(H[0])
@@ -459,7 +459,7 @@ def syndromeTable(H, q):
             sum = 0
             for j in range(n):
                 sum += lider[j]*H[i][j]
-            syndrome.append(sum%q)
+            syndrome.append(sum%p)
         
         key = tuple(syndrome)
 
@@ -471,7 +471,7 @@ def syndromeTable(H, q):
             # Si nkey es igual al número de posibles síndromes, hemos acabado y ponemos flag a 1.
             # Solo queda terminar con el resto de combinaciones del mismo peso para comprobar si
             # alguna combinación es líder de clase
-            if nkey == q**m:
+            if nkey == p**m:
                 flag = 1
         
         # Si el síndrome ya está en la tabla de síndromes, comprobamos si la combinación es líder
@@ -484,7 +484,7 @@ def syndromeTable(H, q):
         # caso salimos del bucle)
         oldw = w
         # Pasamos a la siguiente combinación
-        lider, w = nextCombination(lider, q)
+        lider, w = nextCombination(lider, p)
 
     return syndromes
 
@@ -505,11 +505,11 @@ def syndromeTable(H, q):
 # PARAM: w -> Lista de palabras a decodificar
 # PARAM: H -> Matriz de paridad del código C
 # PARAM: syndromes -> Tabla de síndromes del código C
-# PARAM: q -> Primo representativo del cuerpo Fq del código C
+# PARAM: p -> Primo representativo del cuerpo Fp del código C
 # RETURN: dw -> Lista de palabras decodificadas
 #
 ##
-def wordDecoding(w, H, syndromes, q):
+def wordDecoding(w, H, syndromes, p):
 
     dw = []
 
@@ -526,7 +526,7 @@ def wordDecoding(w, H, syndromes, q):
             sum = 0
             for j in range(n):
                 sum += word[j]*H[i][j]
-            syndrome.append(sum%q)
+            syndrome.append(sum%p)
         
         syndrome = tuple(syndrome)
 
@@ -536,14 +536,14 @@ def wordDecoding(w, H, syndromes, q):
         # Si únicamente hay un líder de clase, añadimos a dw la palabra decodificada
         if len(listerror) == 1:
             for e1, e2 in zip(word, listerror[0]):
-                dw[-1].append((e1-e2)%q)
+                dw[-1].append((e1-e2)%p)
         
         # Si hay más de un líder de clase, añadimos a dw todas las posibles palabras decodificadas
         else:
             for error in listerror:
                 dw[-1].append([])
                 for e1, e2 in zip(word, error):
-                    dw[-1][-1].append((e1-e2)%q)
+                    dw[-1][-1].append((e1-e2)%p)
     
     return dw
 
@@ -563,11 +563,11 @@ def wordDecoding(w, H, syndromes, q):
 # 
 # PARAM: G -> Matriz generadora del código C
 # PARAM: H -> Matriz de paridad del código C
-# PARAM: q -> Primo representativo del cuerpo Fq del código C
+# PARAM: p -> Primo representativo del cuerpo Fp del código C
 # RETURN: True si H es la matriz de paridad de G. False si no lo es
 #
 ##
-def isParityMatrix(G, H, q):
+def isParityMatrix(G, H, p):
     
     m = len(G)
     n = len(G[0])
@@ -581,12 +581,12 @@ def isParityMatrix(G, H, q):
             for j in range(n):
                 # Realizamos la suma de la mutliplicación de la fila de G por la de H
                 sum += G[Grow][j]*H[Hrow][j]
-            # Si la suma módulo q no es cero devolvemos False
-            if sum%q != 0:
+            # Si la suma módulo p no es cero devolvemos False
+            if sum%p != 0:
                 return False
             # Sumamos sum a sumtotal
             sumtotal += sum
     
-    # Si la suma total (sumtotal) módulo q es cero devolvemos False
-    if sumtotal%q == 0:
+    # Si la suma total (sumtotal) módulo p es cero devolvemos False
+    if sumtotal%p == 0:
         return True
