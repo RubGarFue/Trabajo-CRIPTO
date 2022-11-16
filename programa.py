@@ -117,7 +117,7 @@ def matrixGre(G, p):
             break
         i = row
         # Para cada fila, buscamos el líder por columna de arriba a abajo (a partir de la fila en
-        # la que estamos), y por fila de dercha a izquierda, será el primer elemento distinto de 0
+        # la que estamos), y por fila de izquierda a derecha, será el primer elemento distinto de 0
         while Gre[i][lider] == 0:
             i += 1
             # Si m es igual a i pasamos a la siguiente columna desde la fila en la que estamos
