@@ -6,7 +6,10 @@
 #
 # BRIEF: Programa que recibe como argumento una matriz generadora G de un código C subespacio de
 #   Fp^n (junto con la p y la n), y una lista de palabras recibidas en dicho código y realiza la
-#   decodificación por síndrome de la misma.
+#   decodificación por síndrome de la misma. El programa se divide en la función principal, que
+#   recibe los argumentos y llama a las funciones necesarias para realizar la decodificación, y
+#   las funciones auxiliares que realizan dicha decodificación. A esto se añade la función
+#   isParityMatrix que comprueba si una matriz es una matriz de paridad de un código C.
 #
 ##
 
