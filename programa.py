@@ -276,7 +276,7 @@ def weight(lista):
 #   combinación.
 # 
 # PARAM: lista -> Lista conteniendo la combinación actual
-# PARAM: p -> Número siguiente al máximo que cada número dentro de la combinación puede alcanzar
+# PARAM: p -> Sucesor del máximo que cada número puede alcanzar dentro de la combinación
 # RETURN: listaret -> Lista conteniendo la siguiente combinación en el orden correspondiente
 #         w -> Número de elementos distintos de 0 en la combinación devuelta
 #
